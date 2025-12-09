@@ -1,6 +1,6 @@
 import { ChatMessage } from "@/types/chat";
 
-const WEBSOCKET_URL = "wss://echo.websocket.events";
+const WEBSOCKET_URL = "wss://ws.ifelse.io";
 
 export const chatService = {
   ws: null as WebSocket | null,
@@ -18,26 +18,24 @@ export const chatService = {
         };
 
         this.ws.onmessage = (event) => {
-          if (event.data === "echo.websocket.events connected") return;
-
           const assistantMessage: ChatMessage = {
             id: Date.now().toString(),
             text: event.data,
             sender: "assistant",
             timestamp: new Date(),
           };
-
           this.messageHandlers.forEach((h) => h(assistantMessage));
         };
 
-        this.ws.onerror = () => {
+        this.ws.onerror = (event) => {
           const errorObj = new Error("Ошибка WebSocket соединения");
+          console.error("WebSocket ошибка:", event);
           this.errorHandlers.forEach((h) => h(errorObj));
           reject(errorObj);
         };
 
-        this.ws.onclose = () => {
-          console.log("WebSocket отключен");
+        this.ws.onclose = (event) => {
+          console.log("WebSocket отключен", event.code, event.reason);
         };
       } catch (error) {
         reject(error as Error);
